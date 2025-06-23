@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SettingsModal from "../components/SettingsModal"; // For default export
 
 const accounts = [
 	{ name: "Lloyds", holder: "Alice Smith", balance: 3200.45, interest: 1.2 },
@@ -16,6 +17,7 @@ export default function DashboardPage() {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [darkMode, setDarkMode] = useState(true);
 	const [selected, setSelected] = useState<number | null>(null);
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false); // State to control the settings modal
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
@@ -71,9 +73,13 @@ export default function DashboardPage() {
 					<Link href="/dashboard" className={`${theme.text}/90 hover:${theme.text} font-medium py-2 px-3 rounded transition-colors bg-black/0 hover:bg-black/10`}>
 						Dashboard
 					</Link>
-					<Link href="/settings" className={`${theme.text}/90 hover:${theme.text} font-medium py-2 px-3 rounded transition-colors bg-black/0 hover:bg-black/10`}>
+					{/* Open Settings Modal */}
+					<button
+						onClick={() => setIsSettingsOpen(true)}
+						className={`${theme.text}/90 hover:${theme.text} font-medium py-2 px-3 rounded transition-colors bg-black/0 hover:bg-black/10 text-left`}
+					>
 						Settings
-					</Link>
+					</button>
 					<Link href="/stocks" className={`${theme.text}/90 hover:${theme.text} font-medium py-2 px-3 rounded transition-colors bg-black/0 hover:bg-black/10`}>
 						Stocks
 					</Link>
@@ -162,6 +168,8 @@ export default function DashboardPage() {
 					{darkMode ? "Light Mode" : "Dark Mode"}
 				</button>
 			</main>
+			{/* Settings Modal */}
+			<SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 		</div>
 	);
 }
