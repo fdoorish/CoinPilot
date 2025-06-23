@@ -22,12 +22,7 @@ export default function Home() {
           Login
         </Link>
         <div className="w-full flex justify-end mt-8">
-          <Link
-            href="/dashboard"
-            className="px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300 text-sm"
-          >
-            Dashboard (debug)
-          </Link>
+          
         </div>
       </main>
     </div>

@@ -1,25 +1,36 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SettingsModal from "../components/SettingsModal"; // For default export
-
-const accounts = [
-	{ name: "Lloyds", holder: "Alice Smith", balance: 3200.45, interest: 1.2 },
-	{ name: "American Express", holder: "Bob Johnson", balance: 5400.0, interest: 0.8 },
-	{ name: "Chase", holder: "Charlie Lee", balance: 2100.75, interest: 1.5 },
-	{ name: "Monzo", holder: "Dana White", balance: 1500.0, interest: 1.0 },
-	{ name: "Revolut", holder: "Eve Black", balance: 4200.25, interest: 0.9 },
-];
+import { Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js';
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function DashboardPage() {
 	const [menuOpen, setMenuOpen] = useState(false);
-	const [darkMode, setDarkMode] = useState(true);
+	const [darkMode, setDarkMode] = useState(false);
 	const [selected, setSelected] = useState<number | null>(null);
-	const [isSettingsOpen, setIsSettingsOpen] = useState(false); // State to control the settings modal
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+	const [accounts, setAccounts] = useState<any[]>([]);
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
+
+	useEffect(() => {
+		// Fetch accounts
+		fetch("http://127.0.0.1:8000/api/accounts")
+			.then((res) => res.json())
+			.then((data) => setAccounts(Array.isArray(data) ? data : []));
+	}, []);
+
+	// Calculate total as the sum of all account balances (as floats)
+	const total = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
 
 	// Carousel scroll handler (faster)
 	function scrollCarousel(direction: "left" | "right") {
@@ -35,9 +46,6 @@ export default function DashboardPage() {
 			e.preventDefault();
 		}
 	}
-
-	// Calculate total balance
-	const total = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
 	// Theme classes
 	const theme = darkMode
@@ -97,16 +105,12 @@ export default function DashboardPage() {
 				<p className={`text-center max-w-xl mb-4 ${theme.text === "text-white" ? "text-gray-300" : "text-gray-500"}`}>
 					Welcome to your dashboard. Here you can view your connected bank accounts and manage your finances in one place.
 				</p>
-				<div className="text-5xl font-extrabold mb-8" style={{ letterSpacing: '-2px' }}>
-					£{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-				</div>
 				<div className="relative w-full max-w-3xl flex items-center">
 					<div
 						ref={carouselRef}
 						onWheel={handleWheel}
 						className="flex gap-8 overflow-x-auto no-scrollbar py-4 px-2 w-full cursor-grab active:cursor-grabbing"
 						style={{ scrollSnapType: "x mandatory" }}
-						// Add drag-to-scroll
 						onMouseDown={e => {
 							const startX = e.pageX;
 							const scrollLeft = carouselRef.current?.scrollLeft ?? 0;
@@ -123,20 +127,58 @@ export default function DashboardPage() {
 							document.addEventListener('mouseup', onUp);
 						}}
 					>
+						{accounts.length === 0 && (
+							<div className="text-gray-400 text-center w-full">No accounts found.</div>
+						)}
 						{accounts.map((acc, i) => (
 							<div
-								key={acc.name + i}
-								className={`min-w-[260px] h-36 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-semibold transition-colors duration-300 cursor-pointer ${theme.card(i)} ${selected === i ? 'scale-105 ring-4 ring-blue-400 z-20' : ''}`}
+								key={acc.id || acc.owner_name || i}
+								className={`min-w-[376px] h-53 rounded-2xl shadow-lg flex flex-col items-center justify-center text-2xl font-semibold transition-colors duration-300 cursor-pointer ${theme.card(i)} ${selected === i ? 'scale-105 ring-4 ring-blue-400 z-20' : ''}`}
 								style={{ scrollSnapAlign: "center", transition: 'transform 0.2s' }}
 								onClick={() => setSelected(i)}
 							>
-								{acc.name}
+								<div className="text-xl font-bold mb-2">{acc.owner_name}</div>
 							</div>
 						))}
 					</div>
 				</div>
+				{/* Move total and pie chart below cards */}
+				{accounts.length > 0 && (
+					<div className="w-full flex flex-col items-center mt-8 mb-8">
+						<div className="text-5xl font-extrabold mb-4" style={{ letterSpacing: '-2px' }}>
+							£{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+						</div>
+						<div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow p-10 flex flex-col items-center" style={{ height: 442 }}>
+							<h3 className="text-xl font-bold mb-2 text-center text-black">Account Contributions</h3>
+							<Pie
+								data={{
+									labels: accounts.map(acc => acc.owner_name),
+									datasets: [
+										{
+											data: accounts.map(acc => parseFloat(acc.balance) || 0),
+											backgroundColor: [
+												'#60a5fa', '#fbbf24', '#34d399', '#f87171', '#a78bfa', '#f472b6', '#facc15', '#38bdf8', '#4ade80', '#f472b6'
+											],
+											borderWidth: 1,
+										},
+									],
+								}}
+								options={{
+									plugins: {
+										legend: {
+											labels: {
+												color: '#000',
+												font: { size: 14 }
+											}
+										}
+									}
+								}}
+							/>
+						</div>
+					</div>
+				)}
 				{/* Popout modal for account info */}
-				{selected !== null && (
+				{selected !== null && accounts[selected] && (
 					<div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40" onClick={() => setSelected(null)}>
 						<div
 							className="bg-white text-black rounded-3xl shadow-2xl p-12 min-w-[400px] max-w-lg w-full relative animate-pop scale-110 flex flex-col items-center justify-center"
@@ -144,9 +186,9 @@ export default function DashboardPage() {
 							style={{ boxShadow: '0 8px 40px 0 rgba(0,0,0,0.25)' }}
 						>
 							<button className="absolute top-4 right-6 text-3xl text-gray-400 hover:text-black" onClick={() => setSelected(null)}>&times;</button>
-							<h2 className="text-3xl font-bold mb-4 text-center">{accounts[selected].name}</h2>
-							<div className="mb-4 text-lg"><span className="font-semibold">Account Holder:</span> {accounts[selected].holder}</div>
-							<div className="mb-4 text-lg"><span className="font-semibold">Current Balance:</span> £{accounts[selected].balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+							<h2 className="text-3xl font-bold mb-4 text-center">{accounts[selected].owner_name}</h2>
+							<div className="mb-4 text-lg"><span className="font-semibold">Bank:</span> {accounts[selected].bank?.name}</div>
+							<div className="mb-4 text-lg"><span className="font-semibold">Current Balance:</span> £{(parseFloat(accounts[selected].balance) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
 							<div className="text-lg"><span className="font-semibold">Interest Rate:</span> {accounts[selected].interest}%</div>
 						</div>
 						<style jsx>{`
@@ -160,13 +202,6 @@ export default function DashboardPage() {
 						`}</style>
 					</div>
 				)}
-				{/* Dark/Light mode toggle button */}
-				<button
-					onClick={() => setDarkMode((d) => !d)}
-					className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg border transition-colors duration-300 ${theme.button}`}
-				>
-					{darkMode ? "Light Mode" : "Dark Mode"}
-				</button>
 			</main>
 			{/* Settings Modal */}
 			<SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

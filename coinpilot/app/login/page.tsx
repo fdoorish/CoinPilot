@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -9,15 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSliding, setIsSliding] = useState(false);
-  const [apiData, setApiData] = useState<any>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/accounts")
-      .then(res => res.json())
-      .then(setApiData)
-      .catch(() => setApiData({ error: "Failed to fetch" }));
-  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +29,6 @@ export default function LoginPage() {
       }`}
       style={{ willChange: "transform" }}
     >
-      <div>
-        <pre className="text-xs text-white bg-gray-900 p-2 rounded max-w-md overflow-x-auto">
-          {apiData ? JSON.stringify(apiData, null, 2) : "Loading..."}
-        </pre>
-      </div>
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow">
         <h1 className="text-2xl font-bold text-center text-black">Login</h1>
         <form className="space-y-4" onSubmit={handleSubmit}>
