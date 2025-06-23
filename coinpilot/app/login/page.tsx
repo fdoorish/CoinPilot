@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -17,6 +18,9 @@ export default function LoginPage() {
       .then(setApiData)
       .catch(() => setApiData({ error: "Failed to fetch" }));
   }, []);
+
+=======
+  const router = useRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
