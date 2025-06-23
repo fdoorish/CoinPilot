@@ -32,12 +32,12 @@ export default function DashboardPage() {
 	// Calculate total as the sum of all account balances (as floats)
 	const total = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
 
-	// Carousel scroll handler (faster)
-	function scrollCarousel(direction: "left" | "right") {
-		if (!carouselRef.current) return;
-		const width = carouselRef.current.offsetWidth;
-		carouselRef.current.scrollBy({ left: direction === "left" ? -width : width, behavior: "smooth" });
-	}
+  // Carousel scroll handler (faster)
+  function scrollCarousel(direction: "left" | "right") {
+    if (!carouselRef.current) return;
+    const width = carouselRef.current.offsetWidth;
+    carouselRef.current.scrollBy({ left: direction === "left" ? -width : width, behavior: "smooth" });
+  }
 
 	// Allow horizontal scroll with mouse wheel (faster)
 	function handleWheel(e: React.WheelEvent<HTMLDivElement>) {
@@ -47,30 +47,30 @@ export default function DashboardPage() {
 		}
 	}
 
-	// Theme classes
-	const theme = darkMode
-		? {
-				bg: "bg-black",
-				text: "text-white",
-				sidebar: "bg-black border-r-2 border-white",
-				card: (i: number) =>
-					i % 2 === 0
-						? "bg-white text-black border border-white"
-						: "bg-black text-white border border-white",
-				button: "bg-white text-black hover:bg-gray-200",
-				arrow: "bg-white text-black border border-white",
-		  }
-		: {
-				bg: "bg-white",
-				text: "text-black",
-				sidebar: "bg-white border-r-2 border-black",
-				card: (i: number) =>
-					i % 2 === 0
-						? "bg-white text-black border border-black"
-						: "bg-black text-white border border-black",
-				button: "bg-black text-white hover:bg-gray-800",
-				arrow: "bg-black text-white border border-black",
-		  };
+  // Theme classes
+  const theme = darkMode
+    ? {
+        bg: "bg-black",
+        text: "text-white",
+        sidebar: "bg-black border-r-2 border-white",
+        card: (i: number) =>
+          i % 2 === 0
+            ? "bg-white text-black border border-white"
+            : "bg-black text-white border border-white",
+        button: "bg-white text-black hover:bg-gray-200",
+        arrow: "bg-white text-black border border-white",
+      }
+    : {
+        bg: "bg-white",
+        text: "text-black",
+        sidebar: "bg-white border-r-2 border-black",
+        card: (i: number) =>
+          i % 2 === 0
+            ? "bg-white text-black border border-black"
+            : "bg-black text-white border border-black",
+        button: "bg-black text-white hover:bg-gray-800",
+        arrow: "bg-black text-white border border-black",
+      };
 
 	return (
 		<div className={`flex min-h-screen ${theme.bg} transition-colors duration-300`}>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
 						{accounts.map((acc, i) => (
 							<div
 								key={acc.id || acc.owner_name || i}
-								className={`min-w-[376px] h-53 rounded-2xl shadow-lg flex flex-col items-center justify-center text-2xl font-semibold transition-colors duration-300 cursor-pointer ${theme.card(i)} ${selected === i ? 'scale-105 ring-4 ring-blue-400 z-20' : ''}`}
+								className={`min-w-[361px] h-50 rounded-2xl shadow-lg flex flex-col items-center justify-center text-2xl font-semibold transition-colors duration-300 cursor-pointer ${theme.card(i)} ${selected === i ? 'scale-105 ring-4 ring-blue-400 z-20' : ''}`}
 								style={{ scrollSnapAlign: "center", transition: 'transform 0.2s' }}
 								onClick={() => setSelected(i)}
 							>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
 				{/* Move total and pie chart below cards */}
 				{accounts.length > 0 && (
 					<div className="w-full flex flex-col items-center mt-8 mb-8">
-						<div className="text-5xl font-extrabold mb-4" style={{ letterSpacing: '-2px' }}>
+						<div className={`text-5xl font-extrabold mb-4 ${darkMode ? 'text-white' : 'text-black'}`} style={{ letterSpacing: '-2px' }}>
 							£{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 						</div>
 						<div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow p-10 flex flex-col items-center" style={{ height: 442 }}>
@@ -204,7 +204,12 @@ export default function DashboardPage() {
 				)}
 			</main>
 			{/* Settings Modal */}
-			<SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+			<SettingsModal
+				isOpen={isSettingsOpen}
+				onClose={() => setIsSettingsOpen(false)}
+				darkMode={darkMode}
+				setDarkMode={setDarkMode}
+			/>
 		</div>
 	);
 }

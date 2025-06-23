@@ -10,9 +10,11 @@ import { useState } from "react";
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  darkMode: boolean; // Add darkMode as a prop
+  setDarkMode: (value: boolean) => void; // Add setDarkMode as a prop
 }
 
-export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode }: SettingsModalProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const toggleSection = (section: string) => {
@@ -48,8 +50,19 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <button className="w-full mb-2 py-2 px-4 bg-gray-100 text-blue-500 border border-gray-300 rounded hover:bg-gray-200">
                 Update Email Address
               </button>
-              <button className="w-full py-2 px-4 bg-gray-100 text-blue-500 border border-gray-300 rounded hover:bg-gray-200">
+              <button className="w-full mb-2 py-2 px-4 bg-gray-100 text-blue-500 border border-gray-300 rounded hover:bg-gray-200">
                 Update Phone Number
+              </button>
+              {/* Light/Dark Mode Button */}
+              <button
+                onClick={() => setDarkMode(!darkMode)} // Toggle dark mode
+                className={`w-full py-2 px-4 mt-4 ${
+                  darkMode
+                    ? "bg-black text-white border border-gray-300 hover:bg-gray-800"
+                    : "bg-gray-100 text-blue-500 border border-gray-300 hover:bg-gray-200"
+                } rounded`}
+              >
+                {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               </button>
             </div>
           )}
