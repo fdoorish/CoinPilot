@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const accounts = [
-	{ name: "Lloyds" },
-	{ name: "American Express" },
-	{ name: "Chase" },
-	{ name: "Monzo" },
-	{ name: "Revolut" },
+	{ name: "Lloyds", holder: "Alice Smith", balance: 3200.45, interest: 1.2 },
+	{ name: "American Express", holder: "Bob Johnson", balance: 5400.0, interest: 0.8 },
+	{ name: "Chase", holder: "Charlie Lee", balance: 2100.75, interest: 1.5 },
+	{ name: "Monzo", holder: "Dana White", balance: 1500.0, interest: 1.0 },
+	{ name: "Revolut", holder: "Eve Black", balance: 4200.25, interest: 0.9 },
 ];
 
 export default function DashboardPage() {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [darkMode, setDarkMode] = useState(true);
+	const [selected, setSelected] = useState<number | null>(null);
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
@@ -22,11 +23,7 @@ export default function DashboardPage() {
 	function scrollCarousel(direction: "left" | "right") {
 		if (!carouselRef.current) return;
 		const width = carouselRef.current.offsetWidth;
-		if (direction === "left") {
-			carouselRef.current.scrollBy({ left: -width, behavior: "smooth" });
-		} else {
-			carouselRef.current.scrollBy({ left: width, behavior: "smooth" });
-		}
+		carouselRef.current.scrollBy({ left: direction === "left" ? -width : width, behavior: "smooth" });
 	}
 
 	// Allow horizontal scroll with mouse wheel (faster)
@@ -36,6 +33,9 @@ export default function DashboardPage() {
 			e.preventDefault();
 		}
 	}
+
+	// Calculate total balance
+	const total = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
 	// Theme classes
 	const theme = darkMode
@@ -87,44 +87,73 @@ export default function DashboardPage() {
 			</aside>
 			{/* Main Content */}
 			<main className="flex-1 flex flex-col items-center justify-start py-12 px-4 md:px-16">
-				<h1 className={`text-4xl font-bold mb-6 mt-2 tracking-tight ${theme.text}`}>CoinPilot</h1>
-				<p className={`text-center max-w-xl mb-8 ${theme.text === "text-white" ? "text-gray-300" : "text-gray-500"}`}>
+				<h1 className={`text-4xl font-bold mb-2 mt-2 tracking-tight ${theme.text}`}>CoinPilot</h1>
+				<p className={`text-center max-w-xl mb-4 ${theme.text === "text-white" ? "text-gray-300" : "text-gray-500"}`}>
 					Welcome to your dashboard. Here you can view your connected bank accounts and manage your finances in one place.
 				</p>
+				<div className="text-5xl font-extrabold mb-8" style={{ letterSpacing: '-2px' }}>
+					£{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+				</div>
 				<div className="relative w-full max-w-3xl flex items-center">
-					<button
-						aria-label="Scroll left"
-						onClick={() => scrollCarousel("left")}
-						className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-full absolute left-0 z-10 shadow-md ${theme.arrow}`}
-						style={{ top: "50%", transform: "translateY(-50%)" }}
-					>
-						&#8592;
-					</button>
 					<div
 						ref={carouselRef}
 						onWheel={handleWheel}
-						className="flex gap-8 overflow-x-auto no-scrollbar py-4 px-2 w-full"
+						className="flex gap-8 overflow-x-auto no-scrollbar py-4 px-2 w-full cursor-grab active:cursor-grabbing"
 						style={{ scrollSnapType: "x mandatory" }}
+						// Add drag-to-scroll
+						onMouseDown={e => {
+							const startX = e.pageX;
+							const scrollLeft = carouselRef.current?.scrollLeft ?? 0;
+							function onMove(ev: MouseEvent) {
+								if (carouselRef.current) {
+									carouselRef.current.scrollLeft = scrollLeft - (ev.pageX - startX);
+								}
+							}
+							function onUp() {
+								document.removeEventListener('mousemove', onMove);
+								document.removeEventListener('mouseup', onUp);
+							}
+							document.addEventListener('mousemove', onMove);
+							document.addEventListener('mouseup', onUp);
+						}}
 					>
 						{accounts.map((acc, i) => (
 							<div
 								key={acc.name + i}
-								className={`min-w-[260px] h-36 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-semibold transition-colors duration-300 ${theme.card(i)}`}
-								style={{ scrollSnapAlign: "center" }}
+								className={`min-w-[260px] h-36 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-semibold transition-colors duration-300 cursor-pointer ${theme.card(i)} ${selected === i ? 'scale-105 ring-4 ring-blue-400 z-20' : ''}`}
+								style={{ scrollSnapAlign: "center", transition: 'transform 0.2s' }}
+								onClick={() => setSelected(i)}
 							>
 								{acc.name}
 							</div>
 						))}
 					</div>
-					<button
-						aria-label="Scroll right"
-						onClick={() => scrollCarousel("right")}
-						className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-full absolute right-0 z-10 shadow-md ${theme.arrow}`}
-						style={{ top: "50%", transform: "translateY(-50%)" }}
-					>
-						&#8594;
-					</button>
 				</div>
+				{/* Popout modal for account info */}
+				{selected !== null && (
+					<div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40" onClick={() => setSelected(null)}>
+						<div
+							className="bg-white text-black rounded-3xl shadow-2xl p-12 min-w-[400px] max-w-lg w-full relative animate-pop scale-110 flex flex-col items-center justify-center"
+							onClick={e => e.stopPropagation()}
+							style={{ boxShadow: '0 8px 40px 0 rgba(0,0,0,0.25)' }}
+						>
+							<button className="absolute top-4 right-6 text-3xl text-gray-400 hover:text-black" onClick={() => setSelected(null)}>&times;</button>
+							<h2 className="text-3xl font-bold mb-4 text-center">{accounts[selected].name}</h2>
+							<div className="mb-4 text-lg"><span className="font-semibold">Account Holder:</span> {accounts[selected].holder}</div>
+							<div className="mb-4 text-lg"><span className="font-semibold">Current Balance:</span> £{accounts[selected].balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+							<div className="text-lg"><span className="font-semibold">Interest Rate:</span> {accounts[selected].interest}%</div>
+						</div>
+						<style jsx>{`
+							.animate-pop {
+								animation: pop 0.2s cubic-bezier(.4,2,.6,1) both;
+							}
+							@keyframes pop {
+								0% { transform: scale(0.8); opacity: 0; }
+								100% { transform: scale(1.1); opacity: 1; }
+							}
+						`}</style>
+					</div>
+				)}
 				{/* Dark/Light mode toggle button */}
 				<button
 					onClick={() => setDarkMode((d) => !d)}
@@ -132,15 +161,6 @@ export default function DashboardPage() {
 				>
 					{darkMode ? "Light Mode" : "Dark Mode"}
 				</button>
-				<style jsx global>{`
-					.no-scrollbar::-webkit-scrollbar {
-						display: none;
-					}
-					.no-scrollbar {
-						-ms-overflow-style: none;
-						scrollbar-width: none;
-					}
-				`}</style>
 			</main>
 		</div>
 	);
