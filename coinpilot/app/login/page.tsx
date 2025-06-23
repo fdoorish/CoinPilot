@@ -19,9 +19,6 @@ export default function LoginPage() {
       .catch(() => setApiData({ error: "Failed to fetch" }));
   }, []);
 
-=======
-  const router = useRouter();
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (email === "test@example.com" && password === "password") {
