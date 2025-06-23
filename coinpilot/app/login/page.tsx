@@ -1,23 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isSliding, setIsSliding] = useState(false);
+  const router = useRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (email === "test@example.com" && password === "password") {
-      setMessage("Login successful! (Demo only)");
+      setIsSliding(true);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 700); // match animation duration
     } else {
       setMessage("Invalid credentials. Try test@example.com / password");
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black">
+    <main
+      className={`flex min-h-screen items-center justify-center bg-black transition-transform duration-700 ${
+        isSliding ? "-translate-x-full" : ""
+      }`}
+      style={{ willChange: "transform" }}
+    >
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow">
         <h1 className="text-2xl font-bold text-center text-black">Login</h1>
         <form className="space-y-4" onSubmit={handleSubmit}>
